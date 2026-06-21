@@ -28,7 +28,7 @@ QUESTIONS_MAP = {
     "(Score_Z)2.1": "2.1 Comment organiser l'enseignement de la production écrite ?",
     "(Score_Z)2.2": "2.2 Pourquoi intégrer une pratique quotidienne d'écriture et de production écrite en classe ?",
     "(Score_Z)2.3": "2.3 Quels sont les apports respectifs des écrits courts et des écrits longs dans l’apprentissage ?",
-    "(Score_Z)2.4": "2.4 Comment aider les élèves qui écrivent très peu à produire des textes plus conséquents et de meilleure qualité ?",
+    "(Score_Z)2.4": "2.4 Comment aider les élèves qui écrivent très peu à Microsoft ou produire des textes plus conséquents et de meilleure qualité ?",
     "(Score_Z)2.5": "2.5 Quelle(s) approche(s) pour organiser un exercice rédactionnel court et structurant, permettant aux élèves de comprendre comment planifier le contenu d'un court texte en veillant à l'enchaînement et à la cohérence des idées ?",
     "(Score_Z)2.6": "2.6 Quelle(s) approche(s) pour organiser un exercice rédactionnel court et structurant, permettant aux élèves de produire un texte à partir d’une amorce et d’une conclusion fournies ?",
     "(Score_Z)2.7": "2.7 Quelle(s) approche(s) pour organiser un exercice rédactionnel court et structurant, permettant aux élèves de comprendre comment composer une phrase complexe ?",
@@ -183,26 +183,21 @@ if df is not None:
             unrotated_prop = ev / total_var
             unrotated_cum = np.cumsum(unrotated_prop)
             
-            ss_loadings = np.sum(jasp_loadings**2, axis=0)
-            rot_prop = ss_loadings / total_var
-            rot_cum = np.cumsum(rot_prop)
-            
-            # --- 1️⃣ CHARACTERISTICS ---
+            # --- 1️⃣ CHARACTERISTICS (MODIFIÉ - SANS SOLUTION PIVOTÉE) ---
             st.subheader("📋 Caractéristiques des Composantes (Variance Expliquée)")
-            columns_multi = pd.MultiIndex.from_tuples([
-                ('Solution initiale (non pivotée)', 'Valeur Propre'), ('Solution initiale (non pivotée)', 'Proportion var.'), ('Solution initiale (non pivotée)', 'Cumul'),
-                ('Solution pivotée', 'Somme des carrés (Loadings)'), ('Solution pivotée', 'Proportion var.'), ('Solution pivotée', 'Cumul')
+            columns_initial = pd.MultiIndex.from_tuples([
+                ('Solution initiale (non pivotée)', 'Valeur Propre'), 
+                ('Solution initiale (non pivotée)', 'Proportion var.'), 
+                ('Solution initiale (non pivotée)', 'Cumul')
             ])
-            char_df = pd.DataFrame(index=[f"RC {i+1}" for i in range(nb_components)], columns=columns_multi)
+            char_df = pd.DataFrame(index=[f"RC {i+1}" for i in range(nb_components)], columns=columns_initial)
             char_df[('Solution initiale (non pivotée)', 'Valeur Propre')] = ev[:nb_components]
             char_df[('Solution initiale (non pivotée)', 'Proportion var.')] = unrotated_prop[:nb_components]
             char_df[('Solution initiale (non pivotée)', 'Cumul')] = unrotated_cum[:nb_components]
-            char_df[('Solution pivotée', 'Somme des carrés (Loadings)')] = ss_loadings
-            char_df[('Solution pivotée', 'Proportion var.')] = rot_prop
-            char_df[('Solution pivotée', 'Cumul')] = rot_cum
             st.dataframe(char_df.style.format({
-                ('Solution initiale (non pivotée)', 'Valeur Propre'): "{:.3f}", ('Solution initiale (non pivotée)', 'Proportion var.'): "{:.5f}", ('Solution initiale (non pivotée)', 'Cumul'): "{:.4f}",
-                ('Solution pivotée', 'Somme des carrés (Loadings)'): "{:.3f}", ('Solution pivotée', 'Proportion var.'): "{:.5f}", ('Solution pivotée', 'Cumul'): "{:.4f}"
+                ('Solution initiale (non pivotée)', 'Valeur Propre'): "{:.3f}", 
+                ('Solution initiale (non pivotée)', 'Proportion var.'): "{:.5f}", 
+                ('Solution initiale (non pivotée)', 'Cumul'): "{:.4f}"
             }), use_container_width=True)
             
             # --- 2️⃣ SCREE PLOT DYNAMIQUE ---
