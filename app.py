@@ -28,7 +28,7 @@ QUESTIONS_MAP = {
     "(Score_Z)2.1": "2.1 Comment organiser l'enseignement de la production écrite ?",
     "(Score_Z)2.2": "2.2 Pourquoi intégrer une pratique quotidienne d'écriture et de production écrite en classe ?",
     "(Score_Z)2.3": "2.3 Quels sont les apports respectifs des écrits courts et des écrits longs dans l’apprentissage ?",
-    "(Score_Z)2.4": "2.4 Comment aider les élèves qui écrivent très peu à Microsoft ou produire des textes plus conséquents et de meilleure qualité ?",
+    "(Score_Z)2.4": "2.4 Comment aider les élèves qui écrivent très peu à produire des textes plus conséquents et de meilleure qualité ?",
     "(Score_Z)2.5": "2.5 Quelle(s) approche(s) pour organiser un exercice rédactionnel court et structurant, permettant aux élèves de comprendre comment planifier le contenu d'un court texte en veillant à l'enchaînement et à la cohérence des idées ?",
     "(Score_Z)2.6": "2.6 Quelle(s) approche(s) pour organiser un exercice rédactionnel court et structurant, permettant aux élèves de produire un texte à partir d’une amorce et d’une conclusion fournies ?",
     "(Score_Z)2.7": "2.7 Quelle(s) approche(s) pour organiser un exercice rédactionnel court et structurant, permettant aux élèves de comprendre comment composer une phrase complexe ?",
@@ -183,7 +183,7 @@ if df is not None:
             unrotated_prop = ev / total_var
             unrotated_cum = np.cumsum(unrotated_prop)
             
-            # --- 1️⃣ CHARACTERISTICS (MODIFIÉ - SANS SOLUTION PIVOTÉE) ---
+            # --- 1️⃣ CHARACTERISTICS (SANS SOLUTION PIVOTÉE) ---
             st.subheader("📋 Caractéristiques des Composantes (Variance Expliquée)")
             columns_initial = pd.MultiIndex.from_tuples([
                 ('Solution initiale (non pivotée)', 'Valeur Propre'), 
@@ -290,10 +290,14 @@ if df is not None:
 
         # 🟢 SECTION : BONNES COMPOSANTES
         st.markdown("### 🟢 Dimensions Factorielles Retenues (Inclusion)")
+        
+        # LOGIQUE DES VALEURS PAR DEFAUT POUR L'INCLUSION (RC1 à RC6)
+        default_bons = [rc for rc in [f"RC{i}" for i in range(1, 7)] if rc in rc_cols]
+        
         selected_bons = st.multiselect(
             "Sélectionner les composantes à inclure dans l'analyse finale :", 
             options=rc_cols, 
-            default=["RC1", "RC2"] if nb_components >= 2 else rc_cols
+            default=default_bons
         )
         if selected_bons:
             df_bons_rc = final_df[target_rc_idx_global.isin(selected_bons)].copy()
@@ -328,9 +332,14 @@ if df is not None:
 
         # 🔴 SECTION : COMPOSANTES ELIMINEES
         st.markdown("### 🔴 Dimensions Factorielles Écartées (Exclusion)")
+        
+        # LOGIQUE DES VALEURS PAR DEFAUT POUR L'EXCLUSION (RC7 à RC15)
+        default_elims = [rc for rc in [f"RC{i}" for i in range(7, 16)] if rc in rc_cols]
+        
         selected_elims = st.multiselect(
             "Sélectionner les composantes à exclure de l'analyse finale :", 
-            options=rc_cols
+            options=rc_cols,
+            default=default_elims
         )
         if selected_elims:
             df_elims_rc = final_df[target_rc_idx_global.isin(selected_elims)].copy()
