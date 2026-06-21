@@ -183,35 +183,71 @@ if df is not None:
             unrotated_prop = ev / total_var
             unrotated_cum = np.cumsum(unrotated_prop)
             
-            # --- 1️⃣ CHARACTERISTICS (SANS SOLUTION PIVOTÉE) ---
+            # Calcul solution pivotée (SS Loadings)
+            rotated_ss = np.sum(jasp_loadings**2, axis=0)
+            rotated_prop = rotated_ss / total_var
+            rotated_cum = np.cumsum(rotated_prop)
+            
+            # --- 1️⃣ CHARACTERISTICS (AVEC SOLUTION PIVOTÉE) ---
             st.subheader("📋 Caractéristiques des Composantes (Variance Expliquée)")
-            columns_initial = pd.MultiIndex.from_tuples([
-                ('Solution initiale (non pivotée)', 'Valeur Propre'), 
-                ('Solution initiale (non pivotée)', 'Proportion var.'), 
-                ('Solution initiale (non pivotée)', 'Cumul')
+            
+            # Création du MultiIndex
+            columns_multi = pd.MultiIndex.from_tuples([
+                ('Solution initiale', 'Valeur Propre'), 
+                ('Solution initiale', 'Proportion var.'), 
+                ('Solution initiale', 'Cumul'),
+                ('Solution pivotée', 'SS Loadings'), 
+                ('Solution pivotée', 'Proportion var.'), 
+                ('Solution pivotée', 'Cumul')
             ])
-            char_df = pd.DataFrame(index=[f"RC {i+1}" for i in range(nb_components)], columns=columns_initial)
-            char_df[('Solution initiale (non pivotée)', 'Valeur Propre')] = ev[:nb_components]
-            char_df[('Solution initiale (non pivotée)', 'Proportion var.')] = unrotated_prop[:nb_components]
-            char_df[('Solution initiale (non pivotée)', 'Cumul')] = unrotated_cum[:nb_components]
+            
+            char_df = pd.DataFrame(index=[f"RC {i+1}" for i in range(nb_components)], columns=columns_multi)
+            
+            # Remplissage
+            char_df[('Solution initiale', 'Valeur Propre')] = ev[:nb_components]
+            char_df[('Solution initiale', 'Proportion var.')] = unrotated_prop[:nb_components]
+            char_df[('Solution initiale', 'Cumul')] = unrotated_cum[:nb_components]
+            
+            char_df[('Solution pivotée', 'SS Loadings')] = rotated_ss[:nb_components]
+            char_df[('Solution pivotée', 'Proportion var.')] = rotated_prop[:nb_components]
+            char_df[('Solution pivotée', 'Cumul')] = rotated_cum[:nb_components]
+
             st.dataframe(char_df.style.format({
-                ('Solution initiale (non pivotée)', 'Valeur Propre'): "{:.3f}", 
-                ('Solution initiale (non pivotée)', 'Proportion var.'): "{:.5f}", 
-                ('Solution initiale (non pivotée)', 'Cumul'): "{:.4f}"
+                ('Solution initiale', 'Valeur Propre'): "{:.3f}", 
+                ('Solution initiale', 'Proportion var.'): "{:.5f}", 
+                ('Solution initiale', 'Cumul'): "{:.4f}",
+                ('Solution pivotée', 'SS Loadings'): "{:.3f}", 
+                ('Solution pivotée', 'Proportion var.'): "{:.5f}", 
+                ('Solution pivotée', 'Cumul'): "{:.4f}"
             }), use_container_width=True)
             
-            # --- 2️⃣ SCREE PLOT DYNAMIQUE ---
+            # --- 2️⃣ SCREE PLOT DYNAMIQUE (AVEC PIVOTÉE) ---
             st.subheader("📈 Graphique d'Éboulis (Scree Plot) & Critère de Kaiser")
             marker_colors = ['#1f77b4' if val >= 1 else '#bdc3c7' for val in ev] 
+            
             fig = go.Figure()
+            
+            # Trace Initiale
             fig.add_trace(go.Scatter(
-                x=list(range(1, len(ev)+1)), y=ev, mode='lines+markers', name='Valeurs Propres',
-                line=dict(color='#7f8c8d', width=2), marker=dict(size=12, symbol='circle', color=marker_colors, line=dict(color='white', width=1)),
-                customdata=unrotated_prop * 100, hovertemplate="<b>Composante %{x}</b><br>Valeur propre : <b>%{y:.3f}</b><br>Variance expliquée : <b>%{customdata:.2f}%</b><extra></extra>"
+                x=list(range(1, len(ev)+1)), y=ev, mode='lines+markers', name='Solution initiale (VP)',
+                line=dict(color='#7f8c8d', width=2), 
+                marker=dict(size=12, symbol='circle', color=marker_colors, line=dict(color='white', width=1)),
+                customdata=unrotated_prop * 100, 
+                hovertemplate="<b>Composante %{x}</b><br>Initial (VP) : <b>%{y:.3f}</b><br>Variance : <b>%{customdata:.2f}%</b><extra></extra>"
             ))
+            
+            # Trace Pivotée
+            if rotation_type != 'none':
+                fig.add_trace(go.Scatter(
+                    x=list(range(1, nb_components+1)), y=rotated_ss, mode='lines+markers', name='Solution pivotée (SS)',
+                    line=dict(color='#3498db', width=2, dash='dot'),
+                    marker=dict(size=10, symbol='diamond', color='#3498db'),
+                    hovertemplate="<b>Composante %{x}</b><br>Pivotée (SS) : <b>%{y:.3f}</b><extra></extra>"
+                ))
+
             fig.add_shape(type="line", x0=0.5, y0=1, x1=len(ev)+0.5, y1=1, line=dict(color="#e74c3c", width=2, dash="dash"))
             fig.add_annotation(x=len(ev), y=1.05, text="Critère de Kaiser (VP = 1)", showarrow=False, font=dict(color="#e74c3c", size=13), xanchor="right")
-            fig.update_layout(xaxis_title="Composantes (Dimensions Factorielles)", yaxis_title="Valeur Propre (Eigenvalue)", height=600, xaxis=dict(tickmode='linear', dtick=1), margin=dict(l=20, r=20, t=30, b=20), plot_bgcolor='rgba(240, 242, 246, 0.4)')
+            fig.update_layout(xaxis_title="Composantes (Dimensions Factorielles)", yaxis_title="Valeur Propre / SS Loadings", height=600, xaxis=dict(tickmode='linear', dtick=1), margin=dict(l=20, r=20, t=30, b=20), plot_bgcolor='rgba(240, 242, 246, 0.4)')
             st.plotly_chart(fig, use_container_width=True)
             
             # --- 3️⃣ COMPONENT LOADINGS ---
