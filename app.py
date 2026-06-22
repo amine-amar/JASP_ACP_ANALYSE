@@ -407,20 +407,67 @@ if df is not None:
             st.info("Aucune composante n'est actuellement ciblée pour l'exclusion.")
 
         # =========================================================================
-        # 📊 6️⃣ BILAN GLOBAL FINAL
+        # 📊 6️⃣ BILAN GLOBAL FINAL (MODIFIÉ POUR AFFICHER LES QUESTIONS)
         # =========================================================================
         st.markdown("---")
         st.header("📊 Synthèse Qualimétrique et Vérification de l'Intégrité du Modèle")
         st.write("Validation du traitement exhaustif du corpus de variables soumises à l'Analyse en Composantes Principales.")
         
-        nb_unclassified = total_questions - (nb_kept_global + nb_elim_global + nb_orphans_global)
+        # Préparation des listes dynamiques pour l'affichage
+        list_retenues = df_bons_rc.index.tolist() if 'df_bons_rc' in locals() and not df_bons_rc.empty else []
+        list_ecartees = df_elims_rc.index.tolist() if 'df_elims_rc' in locals() and not df_elims_rc.empty else []
+        list_isolees = excluded_list.index.tolist()
+        list_non_classees = [q for q in chosen_list.index if q not in list_retenues and q not in list_ecartees]
+        list_corpus = selected_columns
+
+        nb_unclassified = len(list_non_classees)
         
         col_b1, col_b2, col_b3, col_b4, col_b5 = st.columns(5)
-        col_b1.metric("✅ Variables Retenues", nb_kept_global)
-        col_b2.metric("❌ Variables Écartées", nb_elim_global)
-        col_b3.metric("👻 Variables Isolées (Absence de saturation forte)", nb_orphans_global, help="Variables dont la variance n'est pas expliquée de manière satisfaisante (saturations < seuil).")
-        col_b4.metric("⚠️ Variables Non Classées", nb_unclassified, help="Variables disposant d'une forte saturation mais dont la composante d'appartenance n'a pas encore été arbitrée (Inclusion/Exclusion).")
-        col_b5.metric("📌 Taille du Corpus", total_questions)
+        
+        with col_b1:
+            st.metric("✅ Variables Retenues", nb_kept_global)
+            with st.expander("Voir les questions"):
+                if list_retenues:
+                    for q in list_retenues:
+                        st.caption(f"- {QUESTIONS_MAP.get(q, q)}")
+                else:
+                    st.caption("Aucune variable retenue.")
+
+        with col_b2:
+            st.metric("❌ Variables Écartées", nb_elim_global)
+            with st.expander("Voir les questions"):
+                if list_ecartees:
+                    for q in list_ecartees:
+                        st.caption(f"- {QUESTIONS_MAP.get(q, q)}")
+                else:
+                    st.caption("Aucune variable écartée.")
+
+        with col_b3:
+            st.metric("👻 Variables Isolées", nb_orphans_global, help="Variables dont la variance n'est pas expliquée de manière satisfaisante (saturations < seuil).")
+            with st.expander("Voir les questions"):
+                if list_isolees:
+                    for q in list_isolees:
+                        st.caption(f"- {QUESTIONS_MAP.get(q, q)}")
+                else:
+                    st.caption("Aucune variable isolée.")
+
+        with col_b4:
+            st.metric("⚠️ Variables Non Classées", nb_unclassified, help="Variables disposant d'une forte saturation mais dont la composante d'appartenance n'a pas encore été arbitrée (Inclusion/Exclusion).")
+            with st.expander("Voir les questions"):
+                if list_non_classees:
+                    for q in list_non_classees:
+                        st.caption(f"- {QUESTIONS_MAP.get(q, q)}")
+                else:
+                    st.caption("Toutes les variables sont classées.")
+
+        with col_b5:
+            st.metric("📌 Taille du Corpus", total_questions)
+            with st.expander("Voir les questions"):
+                if list_corpus:
+                    for q in list_corpus:
+                        st.caption(f"- {QUESTIONS_MAP.get(q, q)}")
+                else:
+                    st.caption("Aucune variable dans le corpus.")
         
         if nb_unclassified == 0:
             st.success("L'ensemble des variables manifestes a été traité. La classification structurelle du modèle est complète.")
