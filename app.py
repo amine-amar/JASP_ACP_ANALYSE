@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import os
+from datetime import datetime
 
 st.set_page_config(layout="wide", page_title="Analyse ACP - Réplication JASP")
 st.title("📊 Analyse en Composantes Principales (ACP)")
@@ -312,6 +314,51 @@ if df is not None:
                     use_container_width=True,
                     column_config={"Énoncé de la variable (Question)": st.column_config.TextColumn("Énoncé de la variable (Question)", width=900)}
                 )
+                
+                # --- NOUVEAU BLOC : PROPOSITION DE NOMINATION PAR IA & SAUVEGARDE CSV ---
+                rc_propositions = {
+                    "RC1": "### RC1 : Intégration didactique des outils numériques dans le processus de révision\n*Justification : Ce titre relie parfaitement l'usage de l'instrument - le clavier/traitement de texte - à son but pédagogique principal ici - corriger et réviser.*",
+                    "RC2": "### RC2 : Structuration par les écrits courts et gestion orthographique en contexte\n*Justification : Le terme \"écrits courts\" englobe vos items sur la phrase et le paragraphe, tandis que \"en contexte\" montre que l'orthographe est travaillée pendant la production, et non isolément.*",
+                    "RC3": "### RC3 : Soubassements cognitifs et architecture de la planification textuelle\n*Justification : Ce titre rend justice à la présence de la mémoire de travail/long terme et montre qu'on s'intéresse à la construction mentale du texte avant et pendant l'écriture.*",
+                    "RC4": "### RC4 : Potentiel didactique et usages de la dictée vocale\n*Justification : Simple, complet et académique. Il englobe les avantages, les limites et l'optimisation de cet outil spécifique.*",
+                    "RC5": "### RC5 : Dynamique d'entraînement régulier, fluence et évaluation rédactionnelle\n*Justification : \"Fluence\" traduit l'idée d'aider les élèves à écrire \"plus et mieux\", \"entraînement régulier\" couvre la pratique quotidienne, et l'évaluation clôture le concept.*",
+                    "RC6": "### RC6 : Différenciation pédagogique et étayage du processus de révision\n*Justification : La saturation de la question sur la révision est écrasante (0.956) et elle est associée à l'adaptation aux besoins des élèves. Le terme \"étayage\" désigne l'aide apportée par l'enseignant pour consolider ces bases.*"
+                }
+                
+                if selected_rc_target in rc_propositions:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.caption("🤖 *Note : Le texte ci-dessous est une proposition de nomination générée par Intelligence Artificielle.*")
+                    st.success(rc_propositions[selected_rc_target])
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(f"#### ✏️ Suggérer une modification pour la {selected_rc_target}")
+                    st.write("Si ce titre ne vous convient pas, vous pouvez me proposer un ajustement qui sera directement enregistré dans un fichier de suivi.")
+                    
+                    with st.form(key=f"suggestion_form_{selected_rc_target}"):
+                        nouveau_titre = st.text_input("Votre proposition de nouveau titre :")
+                        nouvelle_justification = st.text_area("Votre justification (optionnel) :")
+                        submit_suggestion = st.form_submit_button("Envoyer la suggestion")
+                        
+                        if submit_suggestion:
+                            if nouveau_titre.strip() == "":
+                                st.warning("⚠️ Veuillez saisir au moins une proposition de titre.")
+                            else:
+                                suggestion_df = pd.DataFrame({
+                                    "Date": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+                                    "Composante": [selected_rc_target],
+                                    "Nouveau Titre": [nouveau_titre],
+                                    "Justification": [nouvelle_justification]
+                                })
+                                file_path = "suggestion.csv"
+                                
+                                if os.path.exists(file_path):
+                                    suggestion_df.to_csv(file_path, mode='a', header=False, index=False, encoding='utf-8')
+                                else:
+                                    suggestion_df.to_csv(file_path, mode='w', header=True, index=False, encoding='utf-8')
+                                
+                                st.success(f"✅ Votre suggestion a été enregistrée avec succès dans le fichier `{file_path}` !")
+                # --------------------------------------------------------------------
+
             else:
                 st.write(f"Aucune variable ne présente de saturation primaire supérieure au seuil ({min_loading}) sur cette composante.")
 
