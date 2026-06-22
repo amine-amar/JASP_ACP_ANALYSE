@@ -272,7 +272,7 @@ if df is not None:
     # =========================================================================
     if len(selected_columns) > 2:
         st.markdown("---")
-        st.header(" Espace d'Analyse Exploratoire")
+        st.header(" 1-Espace d'Analyse Exploratoire")
         st.markdown("*Outils d'assistance à l'interprétation sémantique des composantes et préparation à la rédaction scientifique.*")
 
         rc_cols = [f"RC{i+1}" for i in range(nb_components)]
@@ -336,7 +336,7 @@ if df is not None:
         # 📦 5️⃣ CLASSIFICATION ET ARBITRAGE DES COMPOSANTES
         # =========================================================================
         st.markdown("---")
-        st.header("🟢🔴Arbitrage Décisionnel et Classification Thématique des Composantes")
+        st.header("2-🟢🔴Arbitrage Décisionnel et Classification Thématique des Composantes")
         st.write("Répartition finale des dimensions factorielles retenues pour l'élaboration du modèle théorique.")
 
         target_rc_idx_global = loadings_df.abs().idxmax(axis=1)
@@ -427,7 +427,7 @@ if df is not None:
         # 📊 6️⃣ BILAN GLOBAL FINAL (MODIFIÉ POUR AFFICHER LES QUESTIONS)
         # =========================================================================
         st.markdown("---")
-        st.header("📊 Synthèse Qualimétrique et Vérification de l'Intégrité du Modèle")
+        st.header("3-📊 Synthèse Qualimétrique et Vérification de l'Intégrité du Modèle")
         st.write("Validation du traitement exhaustif du corpus de variables soumises à l'Analyse en Composantes Principales.")
         
         # Préparation des listes dynamiques pour l'affichage
